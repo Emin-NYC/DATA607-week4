@@ -1,0 +1,107 @@
+---
+title: "Week 4 - Airline Analysis"
+author: "Emin Allen"
+date: "2024-09-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this analysis we tidy and transform a dataset of airline destinations, arrivals, and delays. In addition, we perform comparative analysis between the two airlines (Alaska and AM West).
+
+# Load libraries
+```{r} 
+library(readr)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+```
+
+
+# Read CSV file
+```{r}
+url <- "https://raw.githubusercontent.com/Emin-NYC/DATA607-week4/refs/heads/main/airline_delays.csv"
+
+airline_delays <- read.csv(url)
+```
+
+# View data
+```{r}
+print(airline_delays)
+```
+
+# Tidying and transforming the data from wide to long format
+```{r}
+tidy_delays <- airline_delays %>%
+  pivot_longer(
+    cols = c(Los.Angeles, Phoenix, San.Diego, San.Francisco, Seattle), 
+    names_to = "Destination",   
+    values_to = "Delay"         
+  )
+```
+
+# View tidy data
+```{r}
+head(tidy_delays)
+```
+
+# Missing value check
+```{r}
+sum(is.na(tidy_delays))
+```
+
+# Perform comparative analysis
+```{r}
+summary_delays <- tidy_delays %>%
+  group_by(Airline) %>%
+  summarize(
+    Mean_Delay = mean(Delay, na.rm = TRUE),
+    Median_Delay = median(Delay, na.rm = TRUE),
+    SD_Delay = sd(Delay, na.rm = TRUE)
+  )
+```
+
+# Findings from comparative analysis
+Mean delay shows us that on average, AM West flights are more delayed than Alaska flights.
+
+Median delay suggests that both airlines have this value lower than mean delays, which indicates the distribution of delays is right-skewed. 
+
+Standard deviation for AM West suggests larger variability in delay times compared to Alaska. This could mean AM Flights have higher inconsistency in their performance, with most days being minimally delayed, while other days have extremely high delays.  
+
+# View summary statistics
+```{r}
+print(summary_delays)
+```
+
+# Visualizing the data
+```{r}
+ggplot(tidy_delays, aes(x = Destination, y = Delay, color = Airline)) +
+  geom_jitter(width = 0.2, height = 0) +
+  theme_minimal() +
+  labs(title = "Arrival Delays by Destination and Airline",
+       x = "Destination",
+       y = "Arrival Delay (minutes)") +
+  scale_color_manual(values = c("skyblue", "orange"))
+```
+
+
+```{r}
+ggplot(summary_delays, aes(x = Airline, y = Mean_Delay, fill = Airline)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Average Delay by Airline",
+       x = "Airline",
+       y = "Average Delay (minutes)") +
+  geom_text(aes(label = round(Mean_Delay, 1)), vjust = -0.5) +
+  scale_fill_brewer(palette = "Set3")
+```
+
+# Conclusion
+AM West has a higher average delay and greater variability in delays vs Alaska.
+
+Alaska is more consistent and has lower average delays and less variability. 
+
